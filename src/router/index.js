@@ -14,16 +14,27 @@ const routes = [
   },
   {
     path: '/home',
-    component: () => import('../components/Home.vue')
+    component: () => import('../components/Home.vue'),
+    redirect: '/welcome',
+    children: [
+      {
+        path: '/welcome',
+        component: () => import('../components/Welcome.vue')
+      },
+      {
+        path: '/users',
+        component: () => import('../components/users/Users.vue')
+      }
+    ]
   }
 ]
 
 const router = new VueRouter({
-  routes
+  routes,
 })
 router.beforeEach((to, from, next) => {
-  console.log(to);
-  console.log(from);
+  //自己修复的bug
+  window.sessionStorage.setItem('activePath', to.path);
   if (to.path === '/login') return next();
   const token = window.sessionStorage.getItem('token');
   if (!token) return next('/login');
