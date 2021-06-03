@@ -1,77 +1,120 @@
 <!--  -->
 <template>
-  <el-card class="box-card">
-    <el-row :gutter="20">
-      <el-col :span="8">
-        <el-input
-          placeholder="请输入内容"
-          v-model="queryInfo.query"
-          clearable
-          @clear="getUserList"
-        >
-          <el-button
-            slot="append"
-            icon="el-icon-search"
-            @click="getUserList"
-          ></el-button>
-        </el-input>
-      </el-col>
-      <el-col :span="4">
-        <el-button type="primary" @click="dialogVisible = true"
-          >添加用户</el-button
-        >
-      </el-col>
-    </el-row>
-    <el-table :data="userList" border stripe>
-      <el-table-column type="index"> </el-table-column>
-      <el-table-column label="姓名" prop="username"> </el-table-column>
-      <el-table-column label="邮箱" prop="email"> </el-table-column>
-      <el-table-column label="电话" prop="mobile"> </el-table-column>
-      <el-table-column label="角色" prop="role_name"> </el-table-column>
-      <el-table-column label="状态">
-        <template slot-scope="scope">
-          <el-switch
-            v-model="scope.row.mg_state"
-            @change="userStateChanged(scope.row)"
+  <div>
+    <el-breadcrumb separator="/">
+      <el-breadcrumb-item :to="{ path: '/welcome' }">首页</el-breadcrumb-item>
+      <el-breadcrumb-item>用户管理</el-breadcrumb-item>
+      <el-breadcrumb-item>用户列表</el-breadcrumb-item>
+    </el-breadcrumb>
+    <el-card class="box-card">
+      <el-row :gutter="20">
+        <el-col :span="8">
+          <el-input
+            placeholder="请输入内容"
+            v-model="queryInfo.query"
+            clearable
+            @clear="getUserList"
           >
-          </el-switch>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" width="190px">
-        <template slot-scope="scope">
-          <el-button type="primary" icon="el-icon-edit" size="mini"></el-button>
-          <el-button
-            type="danger"
-            icon="el-icon-delete"
-            size="mini"
-            @click="removeUserById(scope.row.id)"
-          ></el-button>
-          <el-tooltip effect="dark" content="分配角色" placement="top">
             <el-button
-              type="warning"
-              icon="el-icon-setting"
+              slot="append"
+              icon="el-icon-search"
+              @click="getUserList"
+            ></el-button>
+          </el-input>
+        </el-col>
+        <el-col :span="4">
+          <el-button type="primary" @click="dialogVisible = true"
+            >添加用户</el-button
+          >
+        </el-col>
+      </el-row>
+      <el-table :data="userList" border stripe>
+        <el-table-column type="index"> </el-table-column>
+        <el-table-column label="姓名" prop="username"> </el-table-column>
+        <el-table-column label="邮箱" prop="email"> </el-table-column>
+        <el-table-column label="电话" prop="mobile"> </el-table-column>
+        <el-table-column label="角色" prop="role_name"> </el-table-column>
+        <el-table-column label="状态">
+          <template slot-scope="scope">
+            <el-switch
+              v-model="scope.row.mg_state"
+              @change="userStateChanged(scope.row)"
+            >
+            </el-switch>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="190px">
+          <template slot-scope="scope">
+            <el-button
+              type="primary"
+              icon="el-icon-edit"
               size="mini"
             ></el-button>
-          </el-tooltip>
-        </template>
-      </el-table-column>
-    </el-table>
-    <el-pagination
-      @size-change="handleSizeChange"
-      @current-change="handleCurrentChange"
-      :current-page="queryInfo.pagenum"
-      :page-sizes="[1, 2, 3, 4]"
-      :page-size="queryInfo.pagesize"
-      layout="total, sizes, prev, pager, next, jumper"
-      :total="total"
+            <el-button
+              type="danger"
+              icon="el-icon-delete"
+              size="mini"
+              @click="removeUserById(scope.row.id)"
+            ></el-button>
+            <el-tooltip effect="dark" content="分配角色" placement="top">
+              <el-button
+                type="warning"
+                icon="el-icon-setting"
+                size="mini"
+                @click="showRoleDialog(scope.row)"
+              ></el-button>
+            </el-tooltip>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :current-page="queryInfo.pagenum"
+        :page-sizes="[1, 2, 3, 4]"
+        :page-size="queryInfo.pagesize"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+      >
+      </el-pagination>
+      <user-dialog
+        :dialogVisible="dialogVisible"
+        @close="dialogVisible = false"
+        @getUserList="getUserList"
+      ></user-dialog>
+    </el-card>
+    <el-dialog
+      title="提示"
+      :visible.sync="setRoleDialogVisible"
+      width="30%"
+      @close="closeRoleDialog"
     >
-    </el-pagination>
-    <user-dialog
-      :dialogVisible="dialogVisible"
-      @close="dialogVisible = false"
-      @getUserList="getUserList"
-    ></user-dialog>
-  </el-card>
+      <p>
+        当前的用户：
+        {{ userInfo.username }}
+      </p>
+      <p>
+        当前的角色：
+        {{ userInfo.role_name }}
+      </p>
+      <p>
+        分配新角色：
+        <el-select v-model="selectedRole" placeholder="请选择">
+          <el-option
+            v-for="item in rolesList"
+            :key="item.id"
+            :label="item.roleName"
+            :value="item.id"
+          >
+          </el-option>
+        </el-select>
+      </p>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="setRoleDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="saveRoleInfo">确 定</el-button>
+      </span>
+    </el-dialog>
+  </div>
 </template>
 
 <script>
@@ -88,12 +131,39 @@ export default {
       userList: [],
       total: 0,
       dialogVisible: false,
+      userInfo: {},
+      rolesList: [],
+      setRoleDialogVisible: false,
+      selectedRole: "",
     };
   },
   created() {
     this.getUserList();
   },
   methods: {
+    closeRoleDialog() {
+      this.selectedRole = "";
+    },
+    async saveRoleInfo() {
+      if (!this.selectedRole) return this.$message.error("请分配角色");
+      const { data: res } = await this.$axios.put(
+        `users/${this.userInfo.id}/role`,
+        {
+          rid: this.selectedRole,
+        }
+      );
+      if (res.meta.status !== 200)
+        return this.$message.error("分配用户角色失败");
+      this.setRoleDialogVisible = false;
+      this.getUserList();
+      this.$message.success(res.meta.msg);
+    },
+    async showRoleDialog(userInfo) {
+      this.userInfo = userInfo;
+      this.setRoleDialogVisible = true;
+      const { data: res } = await this.$axios.get("roles");
+      this.rolesList = res.data;
+    },
     async getUserList() {
       const { data: res } = await this.$axios.get("users", {
         params: this.queryInfo,
@@ -144,4 +214,7 @@ export default {
 };
 </script>
 <style lang='less' scoped>
+.el-dialog__body p {
+  text-align: left;
+}
 </style>

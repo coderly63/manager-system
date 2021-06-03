@@ -47,13 +47,6 @@
         </el-menu>
       </el-aside>
       <el-main>
-        <el-breadcrumb separator="/">
-          <el-breadcrumb-item :to="{ path: '/welcome' }"
-            >首页</el-breadcrumb-item
-          >
-          <el-breadcrumb-item>用户管理</el-breadcrumb-item>
-          <el-breadcrumb-item>用户列表</el-breadcrumb-item>
-        </el-breadcrumb>
         <router-view></router-view>
       </el-main>
     </el-container>
